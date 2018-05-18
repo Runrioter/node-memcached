@@ -1,7 +1,6 @@
 {
   "name": "cristiano",
   "version": "0.0.1",
-  "private": true,
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
