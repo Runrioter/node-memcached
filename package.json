@@ -1,6 +1,10 @@
 {
   "name": "node-memcached",
   "version": "0.0.1",
+  "main": "build/index.js",
+  "module": "build/index.js",
+  "typings": "build/index.d.ts",
+  "types": "build/index.d.ts",
   "devDependencies": {
     "@types/crc": "^3.4.0",
     "@types/jest": "^22.2.3",
@@ -14,10 +18,15 @@
     "crc": "^3.5.0"
   },
   "scripts": {
+    "build": "rm -rf build && tsc",
+    "prepublishOnly": "npm run build",
     "test": "jest --forceExit --detectOpenHandles",
     "lint": "tslint -c tslint.json --project .",
     "lint:fix": "tslint --fix -c tslint.json --project ."
   },
+  "files": [
+    "build"
+  ],
   "jest": {
     "transform": {
       "^.+\\.tsx?$": "ts-jest"

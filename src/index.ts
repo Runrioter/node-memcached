@@ -4,7 +4,8 @@ import { crc32 } from 'crc';
 import { EventEmitter } from 'events';
 import { createConnection, Socket } from 'net';
 import { debuglog } from 'util';
-import { Item, parseResponse as GetParseResponse } from './command/Get';
+import { parseResponse as GetParseResponse } from './command/Get';
+import { Item } from './Item';
 
 const debug = debuglog('node-memcached');
 
@@ -21,7 +22,7 @@ interface IPCAgent {
   sockets: Set<Socket>;
 }
 
-export type Agent = TCPAgent | IPCAgent;
+type Agent = TCPAgent | IPCAgent;
 
 export class MemcacheClient {
 

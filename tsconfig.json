@@ -3,12 +3,17 @@
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "node",
-    "target": "ES5",
+    "target": "ES6",
     "sourceMap": true,
+    "declaration": true,
+    "outDir": "build",
     "noImplicitReturns": true,
     "strict": true,
     "allowJs": false,
-    "lib": ["es6", "es5"]
+    "lib": ["es6"]
   },
+  "include": [
+    "src/**/*"
+  ],
   "exclude": ["node_modules"]
 }

@@ -1,14 +1,6 @@
 // Copyright 2018 Runrioter
 
-export type Value = string | object | Buffer | null;
-
-export interface Item {
-  key: string | string [];
-  value: Value | Value[];
-  flags: number;
-  size: number;
-  casid?: number;
-}
+import { Item } from '../Item';
 
 export function parseResponse(response: string): Item[] {
   const blocks = response.split('\r\n');
