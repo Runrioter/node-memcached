@@ -1,6 +1,6 @@
-cristiano
+node-memcached
 ======
 
-WIP 
+WIP
 
 <3
