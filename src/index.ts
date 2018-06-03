@@ -1,40 +1,35 @@
 // Copyright 2018 Runrioter
 
 import { crc32 } from 'crc';
-import { EventEmitter } from 'events';
 import { createConnection, Socket } from 'net';
 import { debuglog } from 'util';
 import { parseResponse as GetParseResponse } from './command/Get';
 import { Item } from './Item';
+import { Address, TCPAddress, IPCAddress } from './Address';
+import { Client, DefaultTimeout, DefaultMaxIdleConns } from './Client';
 
 const debug = debuglog('node-memcached');
 
-interface TCPAgent {
-  net: 'tcp';
-  ip: string;
-  port: number;
-  sockets: Set<Socket>;
+export interface Config {
+  timeout?: number;
+  maxIdleConns?: number;
 }
 
-interface IPCAgent {
-  net: 'ipc';
-  path: string;
-  sockets: Set<Socket>;
-}
+export class Memcached {
 
-type Agent = TCPAgent | IPCAgent;
+  private readonly clients: Map<Address, Client> = new Map();
+  private readonly addresses: Address[] = [];
 
-export class MemcacheClient {
-
-  private readonly addressList: Agent[] = [];
-
-  constructor(private readonly addrs: string[]) {
+  constructor(
+    private readonly addrs: string[],
+    private readonly config: Config = { timeout: DefaultTimeout, maxIdleConns: DefaultMaxIdleConns },
+  ) {
     if (addrs.length === 0) {
       throw new Error('You need at least one memcached address.');
     }
     for (const addr of addrs) {
       const address = this.parseAddr(addr);
-      this.addressList.push(address);
+      this.addresses.push(address);
     }
     debug('memcached address %j', addrs);
   }
@@ -56,32 +51,21 @@ export class MemcacheClient {
     parser: (response: string) => Item[],
     cb?: (err: Error | null, data?: string | object) => void,
   ): Promise<Item[]> | void {
-
-    const socket = this.getSocketByKey(key);
-    socket.write(`${cmd}\r\n`);
+    const client = this.getClient(key);
+    const conn = client.getConnection();
+    conn.write(`${cmd}\r\n`);
     const p = new Promise<Item[]>((resolve, reject) => {
-      socket.on('data', data => {
+      conn.on('data', data => {
         const parsed = parser(data.toString());
+        client.releaseConnection(conn);
         resolve(parsed);
       });
-      socket.on('error', err => {
-        const sockets = ((socket as any)._addr as Agent).sockets;
-        sockets.forEach(skt => {
-          if (skt === socket) {
-            sockets.delete(socket);
-          }
-        });
+      conn.on('error', err => {
         reject(err);
       });
-      socket.on('lookup', err => {
+      conn.on('lookup', err => {
         if (err !== undefined) {
           reject(err);
-          const sockets = ((socket as any).addr as Agent).sockets;
-          sockets.forEach(skt => {
-            if (skt === socket) {
-              sockets.delete(socket);
-            }
-          });
         }
       });
     });
@@ -94,46 +78,32 @@ export class MemcacheClient {
     return p;
   }
 
-  private parseAddr(address: string): Agent {
-    const matchTCP = address.match(/^tcp\((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d{1,5})\)$/);
+  private parseAddr(addr: string): Address {
+    const matchTCP = addr.match(/^tcp\((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d{1,5})\)$/);
     if (matchTCP !== null) {
-      return {
-        net: 'tcp',
-        ip: matchTCP[1],
-        port: parseInt(matchTCP[2], 10),
-        sockets: new Set<Socket>(),
-      };
+      return new TCPAddress(matchTCP[1], parseInt(matchTCP[2], 10));
     }
-    const matchIPC = address.match(/^unix\((\/\S+)\)$/);
+    const matchIPC = addr.match(/^unix\((\/\S+)\)$/);
     if (matchIPC !== null) {
-      return {
-        net: 'ipc',
-        path: matchIPC[1],
-        sockets: new Set<Socket>(),
-      };
+      return new IPCAddress(matchIPC[1]);
     }
-    throw Error(`node-memcached: bad address ${address}`);
+    throw Error(`node-memcached: bad address ${addr}`);
   }
 
-  private getSocketByKey(key: string): Socket {
-    const index = crc32(key) % this.addressList.length;
-    const addr = this.addressList[index];
-    const { net } = addr;
-    let skt: Socket;
-    if (net === 'tcp') {
-      const { ip: host, port } = addr as TCPAgent;
-      skt = createConnection(port, host, () => {
-        debug('create tcp socket %j', skt.address());
-      });
-    } else {
-      const { path } = addr as IPCAgent;
-      skt = createConnection(path, () => {
-        debug('create ipc socket %j', skt.address());
-        addr.sockets.add(skt);
-      });
+  private getConnection(key: string): Socket {
+    const client = this.getClient(key);
+    return client.getConnection();
+  }
+
+  private getClient(key: string): Client {
+    const index = crc32(key) % this.addresses.length;
+    const addr = this.addresses[index];
+    let client = this.clients.get(addr);
+    if (typeof client === 'undefined') {
+      client = new Client(addr, this.config.timeout, this.config.maxIdleConns);
+      this.clients.set(addr, client);
     }
-    (skt as any)._addr = addr;
-    return skt;
+    return client;
   }
 
 }

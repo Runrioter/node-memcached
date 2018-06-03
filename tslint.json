@@ -32,6 +32,7 @@
     "no-void-expression": false,
     "prefer-function-over-method": false,
     "strict-type-predicates": false,
+    "ordered-imports": false,
     "triple-equals": [true, "allow-undefined-check"],
     "typedef": false,
 

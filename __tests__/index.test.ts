@@ -1,6 +1,6 @@
-import { MemcacheClient } from '../src/.';
+import { Memcached } from '../src/.';
 
-const mc = new MemcacheClient(['tcp(127.0.0.1:11211)']);
+const mc = new Memcached(['tcp(127.0.0.1:11211)']);
 
 describe('MemcachedClient', () => {
   describe('get', () => {
