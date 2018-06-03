@@ -1,6 +1,6 @@
 // Copyright 2018 Runrioter
 
-import { Item } from '../Item';
+import { Item } from './Item';
 
 export function parseResponse(response: string): Item[] {
   const blocks = response.split('\r\n');
@@ -13,9 +13,9 @@ export function parseResponse(response: string): Item[] {
     if (item === null) {
       throw new Error('bad response');
     }
-    const { size } = item;
+    const { bytes } = item;
     const value = blocks[++i];
-    if (size !== value.length) {
+    if (bytes !== Buffer.byteLength(value)) {
       throw new Error('bad response value');
     }
     item.value = value;
@@ -32,8 +32,8 @@ function parseResponseLine(line: string): Item | null {
   return {
     key: itemTokens[1],
     value: null,
-    flags: parseInt10(itemTokens[2]),
-    size: parseInt10(itemTokens[3]),
+    flags: parseInt10(itemTokens[2])!,
+    bytes: parseInt10(itemTokens[3]),
     casid: parseInt10(itemTokens[4]),
   };
   function parseInt10(numeric: string): number | undefined {

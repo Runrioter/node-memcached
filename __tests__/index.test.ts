@@ -11,7 +11,7 @@ describe('MemcachedClient', () => {
           casid: undefined,
           flags: 212,
           key: 'runrioter',
-          size: 9,
+          bytes: 9,
           value: 'runrioter',
         },
       ]);
@@ -26,9 +26,25 @@ describe('MemcachedClient', () => {
           casid: undefined,
           flags: 212,
           key: 'runrioter',
-          size: 9,
+          bytes: 9,
           value: 'runrioter',
         }]);
+        done();
+      });
+    });
+  });
+  describe('set', () => {
+    test('Promise', async () => {
+      expect.assertions(1);
+      await expect(mc.set({ key: 'wang1', flags: 0, exptime: 0, value: 'wang1' })).resolves.toBe(true);
+    });
+    test('Callback', done => {
+      mc.set({ key: 'wang2', flags: 0, exptime: 0, value: 'wang2' }, (err, data) => {
+        if (err) {
+          expect(err).toBeInstanceOf(Error);
+          return done();
+        }
+        expect(data).toBe(true);
         done();
       });
     });

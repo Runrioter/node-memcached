@@ -1,4 +1,4 @@
-import { parseResponse } from '../src/command/Get';
+import { parseResponse } from '../src/GetCommand';
 
 describe('Command', () => {
   describe('Get', () => {
@@ -8,7 +8,7 @@ describe('Command', () => {
           casid: undefined,
           flags: 212,
           key: 'runrioter',
-          size: 9,
+          bytes: 9,
           value: 'runrioter',
         },
       ];
@@ -20,7 +20,7 @@ describe('Command', () => {
           casid: undefined,
           flags: 212,
           key: 'runrioter',
-          size: 9,
+          bytes: 9,
           value: 'runrioter',
         },
       ];
@@ -32,14 +32,14 @@ describe('Command', () => {
           casid: undefined,
           flags: 212,
           key: 'runrioter',
-          size: 9,
+          bytes: 9,
           value: 'runrioter',
         },
         {
           casid: undefined,
           flags: 212,
           key: 'runrioter2',
-          size: 9,
+          bytes: 9,
           value: 'runrioter',
         },
       ];
