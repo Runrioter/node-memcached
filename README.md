@@ -12,6 +12,9 @@ __WIP__
   * promise style: `get(key: string): Promise<Item[]>`
 
 * Storage
+  
+  Item: `{ key: Key; value: Value; flags?: number; exptime?: number;}`
+
   * callback style: `set(item: Item, cb: (err: Error | null, data?: boolean | undefined) => void): void`
   * promise style: `set(item: Item): Promise<boolean>`
 

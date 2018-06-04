@@ -42,15 +42,14 @@ export class Memcached {
     key: string,
     cb?: (err: Error | null, data?: Item[]) => void,
   ): Promise<Item[]> | void {
-    const p = this.runCommand(`get ${key}`, key, GetParseResponse);
-    const pia = p as Promise<Item[]>;
+    const p = this.runCommand(`get ${key}`, key, GetParseResponse) as Promise<Item[]>;
     if (typeof cb === 'function') {
-      pia.then(data => {
+      p.then(data => {
         cb(null, data);
       }).catch(cb);
       return;
     }
-    return pia;
+    return p;
   }
 
   public set(
@@ -68,15 +67,18 @@ export class Memcached {
     const flags = item.flags || 0;
     const exptime = item.exptime || 0;
     const bytes = Buffer.byteLength(key);
-    const p = this.runCommand(`set ${key} ${flags} ${exptime} ${bytes}\r\n${value}`, key, SetParseResponse);
-    const pb = p as Promise<boolean>;
+    const p = this.runCommand(
+      `set ${key} ${flags} ${exptime} ${bytes}\r\n${value}\r\n`,
+      key,
+      SetParseResponse,
+    ) as Promise<boolean>;
     if (cb) {
-      pb.then(data => {
+      p.then(data => {
         cb(null, data);
       }).catch(cb);
       return;
     }
-    return pb;
+    return p;
   }
 
   private runCommand(
